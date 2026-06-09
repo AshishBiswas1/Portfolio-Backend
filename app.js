@@ -10,6 +10,10 @@ const projectRouter = require('./routes/projectRoutes');
 const adminRouter = require('./routes/adminRoute');
 const objectiveRouter = require('./routes/objectiveRoutes');
 const userRouter = require('./routes/userRoutes');
+const qualificationRouter = require('./routes/qualificationRoutes');
+const internshipRouter = require('./routes/internshipRoutes');
+const skillRouter = require('./routes/skillsRoute');
+const resumeRouter = require('./routes/resumeRoutes');
 
 const app = express();
 
@@ -25,6 +29,10 @@ app.use('/api/v1/projects', projectRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/objective', objectiveRouter);
 app.use('/api/v1/user', userRouter);
+app.use('/api/v1/qualification', qualificationRouter);
+app.use('/api/v1/internship', internshipRouter);
+app.use('/api/v1/skill', skillRouter);
+app.use('/api/v1/resume', resumeRouter);
 
 // Handle unhandled routes
 app.use((req, res, next) => {

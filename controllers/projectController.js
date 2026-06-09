@@ -1,16 +1,7 @@
 const AppError = require('../util/appError');
 const catchAsync = require('../util/catchAsync');
 const Project = require('../models/projectModel');
-
-const filterObj = (obj, ...allowedFields) => {
-  const newObj = {};
-  Object.keys(obj).forEach((el) => {
-    if (allowedFields.includes(el)) {
-      newObj[el] = obj[el];
-    }
-  });
-  return newObj;
-};
+const filterObj = require('../util/filterObj');
 
 exports.createProject = catchAsync(async (req, res, next) => {
   const filteredBody = filterObj(

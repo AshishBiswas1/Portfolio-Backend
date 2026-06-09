@@ -31,7 +31,14 @@ exports.getUserDetails = catchAsync(async (req, res, next) => {
 });
 
 exports.updateUserDetails = catchAsync(async (req, res, next) => {
-  const filteredBody = filterObj(req.body, 'name', 'email', 'designation');
+  const filteredBody = filterObj(
+    req.body,
+    'name',
+    'email',
+    'designation',
+    'githubLink',
+    'linkedinLink'
+  );
 
   if (req.file) {
     const uploadStream = new Promise((resolve, reject) => {
