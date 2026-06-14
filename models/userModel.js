@@ -135,6 +135,51 @@ userSchema.pre(/^find/, function () {
   this.find({ active: { $ne: false } });
 });
 
+// ==========================================
+// METHOD 1: VERIFY LOGIN PASSWORD
+// ==========================================
+userSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  // Compares plain text login attempt with the encrypted DB hash
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+// ==========================================
+// METHOD 2: VALIDATE JWT ISSUANCE TIME
+// ==========================================
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+
+    // Returns true if password was changed AFTER the current token was generated
+    return JWTTimestamp < changedTimestamp;
+  }
+
+  // False means the password has not been changed since token issuance
+  return false;
+};
+
+// ==========================================
+// METHOD 3: GENERATE PASSWORD RESET TOKEN
+// ==========================================
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 Minute Expiry
+
+  return resetToken;
+};
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

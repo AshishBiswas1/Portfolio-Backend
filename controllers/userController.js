@@ -77,3 +77,26 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
     data: { user: updatedUser }
   });
 });
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user.id).select('+password');
+
+  const isCurrentPasswordCorrect = await user.correctPassword(
+    req.body.currentPassword,
+    user.password
+  );
+
+  if (!isCurrentPasswordCorrect) {
+    return next(new AppError('Your current password is incorrect.', 401));
+  }
+
+  user.password = req.body.newPassword;
+  user.confirmPassword = req.body.confirmPassword;
+
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Password updated successfully.'
+  });
+});

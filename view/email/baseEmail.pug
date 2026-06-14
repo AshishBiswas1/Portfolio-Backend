@@ -1,0 +1,68 @@
+doctype html
+html
+  head
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    meta(http-equiv='Content-Type', content='text/html; charset=UTF-8')
+    title #{subject}
+    style.
+      /* Global email layout structure */
+      body { background-color: #f6f6f6; font-family: sans-serif; -webkit-font-smoothing: antialiased; font-size: 14px; line-height: 1.6; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
+      table { border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; }
+      table td { font-family: sans-serif; font-size: 14px; vertical-align: top; }
+      .body { background-color: #f6f6f6; width: 100%; }
+      .container { display: block; margin: 0 auto !important; max-width: 580px; padding: 10px; width: 580px; }
+      .content { display: block; margin: 0 auto; max-width: 580px; padding: 10px; }
+      
+      /* Visual Design Components */
+      .main { background: #ffffff; border-radius: 8px; width: 100%; border: 1px solid #e9e9e9; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+      .wrapper { box-sizing: border-box; padding: 30px; }
+      .header { padding: 20px 0; text-align: center; }
+      .brand-logo { color: #0070f3; font-size: 22px; font-weight: bold; text-decoration: none; letter-spacing: -0.5px; }
+      .footer { clear: both; margin-top: 20px; text-align: center; width: 100%; }
+      .footer td, .footer p, .footer span { color: #999999; font-size: 12px; text-align: center; }
+      
+      /* Typography & Utility classes */
+      h2 { color: #222222; font-family: sans-serif; font-weight: 600; line-height: 1.4; margin: 0; margin-bottom: 20px; font-size: 18px; }
+      p { font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px; color: #4a4a4a; }
+      
+      /* Buttons */
+      .btn { box-sizing: border-box; width: 100%; }
+      .btn table { width: auto; margin: 20px 0; }
+      .btn table td { background-color: #0070f3; border-radius: 5px; text-align: center; }
+      .btn a { background-color: #0070f3; border: solid 1px #0070f3; border-radius: 5px; box-sizing: border-box; color: #ffffff !important; display: inline-block; font-size: 14px; font-weight: bold; margin: 0; padding: 12px 25px; text-decoration: none; }
+      
+      /* Custom UI alerts */
+      .message-box { background: #f9f9f9; padding: 15px; border-left: 4px solid #0070f3; border-radius: 4px; margin-top: 15px; font-style: italic; color: #333333; }
+  
+  body
+    table.body(role='presentation', border='0', cellpadding='0', cellspacing='0')
+      tr
+        td &nbsp;
+        td.container
+          .content
+            // UNIVERSAL HEADER
+            .header
+              table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+                tr
+                  td
+                    a.brand-logo(href='#') Portfolio Hub
+            
+            // MAIN CONTENT CARD
+            table.main(role='presentation', border='0', cellpadding='0', cellspacing='0')
+              tr
+                td.wrapper
+                  table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+                    tr
+                      td
+                        // This block acts as a portal. The child files inject their code directly here!
+                        block content
+            
+            // UNIVERSAL FOOTER
+            .footer
+              table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+                tr
+                  td.content-block
+                    span Active Developer Portal Engine
+                    br
+                    | Ashish Biswas Portfolio © 2026
+        td &nbsp;

@@ -14,6 +14,7 @@ const qualificationRouter = require('./routes/qualificationRoutes');
 const internshipRouter = require('./routes/internshipRoutes');
 const skillRouter = require('./routes/skillsRoute');
 const resumeRouter = require('./routes/resumeRoutes');
+const contactRouter = require('./routes/contactRoutes');
 
 const app = express();
 
@@ -24,6 +25,13 @@ if (process.env.NODE_ENV === 'development') {
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Welcome to the Portfolio API'
+  });
+});
+
 // Mount the CMS Routes
 app.use('/api/v1/projects', projectRouter);
 app.use('/api/v1/admin', adminRouter);
@@ -33,6 +41,7 @@ app.use('/api/v1/qualification', qualificationRouter);
 app.use('/api/v1/internship', internshipRouter);
 app.use('/api/v1/skill', skillRouter);
 app.use('/api/v1/resume', resumeRouter);
+app.use('/api/v1/constact', contactRouter);
 
 // Handle unhandled routes
 app.use((req, res, next) => {

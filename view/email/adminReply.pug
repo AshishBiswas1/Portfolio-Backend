@@ -1,0 +1,15 @@
+extends baseEmail
+
+block content
+  h2 Hello #{firstName},
+  p Thank you for reaching out through my portfolio website. Here is a response regarding your inquiry:
+  
+  // The Admin's dynamic custom typed response message block
+  .message-box(style="border-left-color: #0070f3; font-style: normal; margin-bottom: 30px;")
+    p(style="white-space: pre-line; color: #222222;") #{replyMessage}
+  
+  hr(style="border: 0; border-top: 1px solid #eee; margin: 20px 0;")
+  
+  p(style="font-size: 12px; color: #777777; font-style: italic;") For reference, your original message text was:
+  blockquote(style="border-left: 3px solid #ddd; padding-left: 15px; margin: 10px 0; color: #666666; font-size: 13px;") 
+    | "#{originalMessage}"

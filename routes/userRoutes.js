@@ -13,4 +13,6 @@ router
   .route('/update')
   .patch(upload.single('photo'), userController.updateUserDetails);
 
+router.route('/update-password').patch(userController.updatePassword);
+
 module.exports = router;

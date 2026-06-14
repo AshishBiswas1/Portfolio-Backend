@@ -1,0 +1,19 @@
+extends baseEmail
+
+block content
+  h2 New Portfolio Message Alert!
+  p You have received a new inquiry from your website contact form.
+  
+  table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+    tr
+      td(style='padding-bottom: 5px;')
+        strong Name: 
+        | #{visitorName}
+    tr
+      td(style='padding-bottom: 15px;')
+        strong Email: 
+        | #{visitorEmail}
+        
+  p(style='margin-top: 10px; font-weight: bold; color: #222222;') Message Content:
+  .message-box
+    p #{visitorMessage}
