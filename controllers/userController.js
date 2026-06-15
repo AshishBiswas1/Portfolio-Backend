@@ -21,7 +21,7 @@ const filterObj = (obj, ...allowedFields) => {
 
 exports.getUserDetails = catchAsync(async (req, res, next) => {
   const user = await User.find().select(
-    'name email designation photo address number'
+    'name email designation photo address number githubLink linkedinLink'
   );
 
   res.status(200).json({
