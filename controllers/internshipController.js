@@ -11,9 +11,28 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const { deleteFromCloudinary } = require('../util/cloudinaryHelper');
+
+const uploadToCloudinary = (fileBuffer, folder, publicId) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        public_id: publicId,
+        resource_type: 'auto'
+      },
+      (error, result) => {
+        if (error) return reject(new AppError('Failed to upload file to Cloudinary', 500));
+        resolve(result);
+      }
+    );
+    stream.end(fileBuffer);
+  });
+};
+
 exports.getAllInternships = catchAsync(async (req, res, next) => {
   const internships = await Internship.find()
-    .select('role company workType location certificate duration')
+    .select('role company workType location certificate offerLetter recommendationLetter duration')
     .sort('-endDateNumeric');
 
   res.status(200).json({
@@ -25,7 +44,7 @@ exports.getAllInternships = catchAsync(async (req, res, next) => {
 
 exports.getTopInternships = catchAsync(async (req, res, next) => {
   const internships = await Internship.find()
-    .select('role company workType location certificate duration')
+    .select('role company workType location certificate offerLetter recommendationLetter duration')
     .sort('-impactScore -endDateNumeric')
     .limit(3);
 
@@ -59,33 +78,39 @@ exports.addInternship = catchAsync(async (req, res, next) => {
     'techStack',
     'impactScore',
     'description',
-    'duration', // As discussed earlier, allow the top-level duration object!
+    'duration',
     'duration.startDate',
     'duration.endDate'
   );
 
   const newInternshipId = new mongoose.Types.ObjectId();
-
   filteredBody._id = newInternshipId;
 
-  if (req.file) {
-    const uploadStream = new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'portfolio_files',
-          public_id: `internship_${newInternshipId}`,
-          resource_type: 'auto'
-        },
-        (error, result) => {
-          if (error) return reject(new AppError('Failed to upload image', 500));
-          resolve(result);
-        }
+  if (req.files) {
+    if (req.files.certificate && req.files.certificate[0]) {
+      const resVal = await uploadToCloudinary(
+        req.files.certificate[0].buffer,
+        'portfolio_files',
+        `internship_${newInternshipId}`
       );
-      stream.end(req.file.buffer);
-    });
-    const cloudinaryResult = await uploadStream;
-
-    filteredBody.certificate = cloudinaryResult.secure_url;
+      filteredBody.certificate = resVal.secure_url;
+    }
+    if (req.files.offerLetter && req.files.offerLetter[0]) {
+      const resVal = await uploadToCloudinary(
+        req.files.offerLetter[0].buffer,
+        'portfolio_files',
+        `offerLetter_${newInternshipId}`
+      );
+      filteredBody.offerLetter = resVal.secure_url;
+    }
+    if (req.files.recommendationLetter && req.files.recommendationLetter[0]) {
+      const resVal = await uploadToCloudinary(
+        req.files.recommendationLetter[0].buffer,
+        'portfolio_files',
+        `recommendationLetter_${newInternshipId}`
+      );
+      filteredBody.recommendationLetter = resVal.secure_url;
+    }
   }
 
   const newInternship = await Internship.create(filteredBody);
@@ -111,26 +136,48 @@ exports.updateInternship = catchAsync(async (req, res, next) => {
     'duration.endDate'
   );
 
-  if (req.file) {
-    const uploadStream = new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'portfolio_files',
-          public_id: `internship_${req.params.id}`,
-          overwrite: true,
-          invalidate: true,
-          resource_type: 'auto'
-        },
-        (error, result) => {
-          if (error) return reject(new AppError('Failed to upload image', 500));
-          resolve(result);
-        }
-      );
-      stream.end(req.file.buffer);
-    });
-    const cloudinaryResult = await uploadStream;
+  const internship = await Internship.findById(req.params.id);
+  if (!internship) {
+    return next(new AppError('No internship found with that ID', 404));
+  }
 
-    filteredBody.certificate = cloudinaryResult.secure_url;
+  if (req.files) {
+    if (req.files.certificate && req.files.certificate[0]) {
+      if (internship.certificate) {
+        await deleteFromCloudinary(internship.certificate, 'image');
+        await deleteFromCloudinary(internship.certificate, 'raw');
+      }
+      const resVal = await uploadToCloudinary(
+        req.files.certificate[0].buffer,
+        'portfolio_files',
+        `internship_${req.params.id}`
+      );
+      filteredBody.certificate = resVal.secure_url;
+    }
+    if (req.files.offerLetter && req.files.offerLetter[0]) {
+      if (internship.offerLetter) {
+        await deleteFromCloudinary(internship.offerLetter, 'image');
+        await deleteFromCloudinary(internship.offerLetter, 'raw');
+      }
+      const resVal = await uploadToCloudinary(
+        req.files.offerLetter[0].buffer,
+        'portfolio_files',
+        `offerLetter_${req.params.id}`
+      );
+      filteredBody.offerLetter = resVal.secure_url;
+    }
+    if (req.files.recommendationLetter && req.files.recommendationLetter[0]) {
+      if (internship.recommendationLetter) {
+        await deleteFromCloudinary(internship.recommendationLetter, 'image');
+        await deleteFromCloudinary(internship.recommendationLetter, 'raw');
+      }
+      const resVal = await uploadToCloudinary(
+        req.files.recommendationLetter[0].buffer,
+        'portfolio_files',
+        `recommendationLetter_${req.params.id}`
+      );
+      filteredBody.recommendationLetter = resVal.secure_url;
+    }
   }
 
   const updatedInternship = await Internship.findByIdAndUpdate(

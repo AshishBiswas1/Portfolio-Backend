@@ -5,6 +5,8 @@ const filterObj = require('../util/filterObj');
 const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
 
+const { deleteFromCloudinary } = require('../util/cloudinaryHelper');
+
 // ==========================================
 // 1. THE MACHINE LEARNING ENDPOINT
 // ==========================================
@@ -175,6 +177,11 @@ exports.updateResume = catchAsync(async (req, res, next) => {
 
   // 4. Handle Cloudinary PDF update (only updates if a new file is attached)
   if (req.file) {
+    if (resume && resume.resumePdf) {
+      await deleteFromCloudinary(resume.resumePdf, 'raw');
+      await deleteFromCloudinary(resume.resumePdf, 'image');
+    }
+
     const uploadStream = new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {

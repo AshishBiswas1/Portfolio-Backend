@@ -9,6 +9,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const { deleteFromCloudinary } = require('../util/cloudinaryHelper');
+
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach((el) => {
@@ -41,6 +43,11 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
   );
 
   if (req.file) {
+    const oldUser = await User.findById(req.user.id);
+    if (oldUser && oldUser.photo) {
+      await deleteFromCloudinary(oldUser.photo, 'image');
+    }
+
     const uploadStream = new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {

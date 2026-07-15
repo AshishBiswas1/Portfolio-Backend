@@ -2,6 +2,16 @@ const AppError = require('../util/appError');
 const catchAsync = require('../util/catchAsync');
 const Project = require('../models/projectModel');
 const filterObj = require('../util/filterObj');
+const cloudinary = require('cloudinary').v2;
+const mongoose = require('mongoose');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const { deleteFromCloudinary } = require('../util/cloudinaryHelper');
 
 exports.createProject = catchAsync(async (req, res, next) => {
   const filteredBody = filterObj(
@@ -15,6 +25,28 @@ exports.createProject = catchAsync(async (req, res, next) => {
     'duration',
     'image'
   );
+
+  const newProjectId = new mongoose.Types.ObjectId();
+  filteredBody._id = newProjectId;
+
+  if (req.file) {
+    const uploadStream = new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'portfolio_files/video',
+          public_id: `video_${newProjectId}`,
+          resource_type: 'video'
+        },
+        (error, result) => {
+          if (error) return reject(new AppError('Failed to upload video to Cloudinary', 500));
+          resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+    const cloudinaryResult = await uploadStream;
+    filteredBody.video = cloudinaryResult.secure_url;
+  }
 
   const newProject = await Project.create(filteredBody);
 
@@ -75,6 +107,32 @@ exports.updateProject = catchAsync(async (req, res, next) => {
   delete filteredBody.mlScore;
   delete filteredBody.mlConfidence;
   delete filteredBody.mlLastAnalyzed;
+
+  if (req.file) {
+    const oldProject = await Project.findById(req.params.id);
+    if (oldProject && oldProject.video) {
+      await deleteFromCloudinary(oldProject.video, 'video');
+    }
+
+    const uploadStream = new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'portfolio_files/video',
+          public_id: `video_${req.params.id}`,
+          overwrite: true,
+          invalidate: true,
+          resource_type: 'video'
+        },
+        (error, result) => {
+          if (error) return reject(new AppError('Failed to upload video to Cloudinary', 500));
+          resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+    const cloudinaryResult = await uploadStream;
+    filteredBody.video = cloudinaryResult.secure_url;
+  }
 
   const updatedProject = await Project.findByIdAndUpdate(
     req.params.id,

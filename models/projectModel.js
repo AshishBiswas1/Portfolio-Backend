@@ -107,6 +107,16 @@ const projectSchema = new mongoose.Schema(
         message: 'Please provide valid URLs for project images'
       }
     },
+    video: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function (val) {
+          return !val || validator.isURL(val);
+        },
+        message: 'Please provide a valid video URL'
+      }
+    },
     mlScore: {
       type: Number,
       default: 0,

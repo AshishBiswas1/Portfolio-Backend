@@ -48,6 +48,16 @@ const internshipSchema = new mongoose.Schema(
       trim: true,
       default: null
     },
+    offerLetter: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    recommendationLetter: {
+      type: String,
+      trim: true,
+      default: null
+    },
     duration: {
       startDate: {
         type: String,

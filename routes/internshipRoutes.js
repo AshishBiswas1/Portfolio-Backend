@@ -13,11 +13,25 @@ router.use(authController.protect, authController.restrictTo('admin'));
 
 router
   .route('/')
-  .post(upload.single('certificate'), internshipController.addInternship);
+  .post(
+    upload.fields([
+      { name: 'certificate', maxCount: 1 },
+      { name: 'offerLetter', maxCount: 1 },
+      { name: 'recommendationLetter', maxCount: 1 }
+    ]),
+    internshipController.addInternship
+  );
 
 router
   .route('/:id')
-  .patch(upload.single('certificate'), internshipController.updateInternship)
+  .patch(
+    upload.fields([
+      { name: 'certificate', maxCount: 1 },
+      { name: 'offerLetter', maxCount: 1 },
+      { name: 'recommendationLetter', maxCount: 1 }
+    ]),
+    internshipController.updateInternship
+  )
   .delete(internshipController.deleteInternship);
 
 module.exports = router;

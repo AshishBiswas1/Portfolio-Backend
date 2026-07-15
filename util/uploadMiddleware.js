@@ -3,9 +3,10 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
-  // Allow images AND specific document types like PDF
+  // Allow images, videos, AND specific document types like PDF
   if (
     file.mimetype.startsWith('image') ||
+    file.mimetype.startsWith('video') ||
     file.mimetype === 'application/pdf' ||
     file.mimetype === 'application/msword' ||
     file.mimetype ===
@@ -15,7 +16,7 @@ const multerFilter = (req, file, cb) => {
   } else {
     cb(
       new AppError(
-        'Not a valid image or document type! Please upload only images, PDFs, or Word docs.',
+        'Not a valid file type! Please upload only images, videos, PDFs, or Word docs.',
         400
       ),
       false
@@ -25,7 +26,7 @@ const multerFilter = (req, file, cb) => {
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
   fileFilter: multerFilter
 });
 
