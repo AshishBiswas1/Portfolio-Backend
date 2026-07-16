@@ -1,0 +1,50 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: portfolio-backend-dev
+    restart: unless-stopped
+    command: npm run dev
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      NODE_ENV: development
+      DATABASE: ${DATABASE}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:-thisismyportfolioandonlyIhavetheaccesstomakechangestoit}
+      JWT_EXPIRES_IN: 90d
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    networks:
+      - portfolio-network-dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ../ashishbiswasportfolio
+      dockerfile: Dockerfile
+    container_name: portfolio-frontend-dev
+    restart: unless-stopped
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+      NODE_ENV: development
+    depends_on:
+      - backend
+    networks:
+      - portfolio-network-dev
+    volumes:
+      - ../ashishbiswasportfolio:/app
+      - /app/node_modules
+      - /app/.next
+
+networks:
+  portfolio-network-dev:
+    driver: bridge
