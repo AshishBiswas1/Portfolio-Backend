@@ -15,6 +15,7 @@ const internshipRouter = require('./routes/internshipRoutes');
 const skillRouter = require('./routes/skillsRoute');
 const resumeRouter = require('./routes/resumeRoutes');
 const contactRouter = require('./routes/contactRoutes');
+const frameRouter = require('./routes/frameRoutes');
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use('/api/v1/internship', internshipRouter);
 app.use('/api/v1/skill', skillRouter);
 app.use('/api/v1/resume', resumeRouter);
 app.use('/api/v1/constact', contactRouter);
+app.use('/api/v1/frames', frameRouter);
 
 // Handle unhandled routes
 app.use((req, res, next) => {
