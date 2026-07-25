@@ -27,6 +27,11 @@ const resumeSchema = new mongoose.Schema(
       phone: { type: String },
       location: { type: String }
     },
+    location: { type: String, trim: true },
+    email: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    github: { type: String, trim: true },
+    linkedin: { type: String, trim: true },
     socialLinks: {
       github: { type: String },
       linkedin: { type: String }
@@ -37,12 +42,23 @@ const resumeSchema = new mongoose.Schema(
       type: String,
       default: null // Will be populated by our Cloudinary upload stream
     },
+    url: {
+      type: String,
+      default: null
+    },
+    resumeUrl: {
+      type: String,
+      default: null
+    },
 
     // 3. THE SUMMARIES
     // The fallback summary if the ML model hasn't figured out what the visitor wants yet
     defaultSummary: {
       type: String,
       required: [true, 'Please provide a default summary']
+    },
+    summary: {
+      type: String
     },
 
     // The ML-Driven Array: Your Next.js app will analyze the visitor,
@@ -57,7 +73,9 @@ const resumeSchema = new mongoose.Schema(
             'FullStack',
             'DataScience',
             'DevOps',
-            'General'
+            'General',
+            'AI/ML',
+            'AI'
           ],
           required: true
         },

@@ -31,9 +31,8 @@ const uploadToCloudinary = (fileBuffer, folder, publicId) => {
 };
 
 exports.getAllInternships = catchAsync(async (req, res, next) => {
-  const internships = await Internship.find()
-    .select('role company workType location certificate offerLetter recommendationLetter duration')
-    .sort('-endDateNumeric');
+  // Select ALL internship fields without restricting description, techStack, impactScore
+  const internships = await Internship.find().sort('-endDateNumeric');
 
   res.status(200).json({
     status: 'success',
@@ -44,7 +43,6 @@ exports.getAllInternships = catchAsync(async (req, res, next) => {
 
 exports.getTopInternships = catchAsync(async (req, res, next) => {
   const internships = await Internship.find()
-    .select('role company workType location certificate offerLetter recommendationLetter duration')
     .sort('-impactScore -endDateNumeric')
     .limit(3);
 
@@ -79,8 +77,9 @@ exports.addInternship = catchAsync(async (req, res, next) => {
     'impactScore',
     'description',
     'duration',
-    'duration.startDate',
-    'duration.endDate'
+    'certificate',
+    'offerLetter',
+    'recommendationLetter'
   );
 
   const newInternshipId = new mongoose.Types.ObjectId();
@@ -132,8 +131,9 @@ exports.updateInternship = catchAsync(async (req, res, next) => {
     'impactScore',
     'description',
     'duration',
-    'duration.startDate',
-    'duration.endDate'
+    'certificate',
+    'offerLetter',
+    'recommendationLetter'
   );
 
   const internship = await Internship.findById(req.params.id);

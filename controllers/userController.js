@@ -22,9 +22,8 @@ const filterObj = (obj, ...allowedFields) => {
 };
 
 exports.getUserDetails = catchAsync(async (req, res, next) => {
-  const user = await User.find().select(
-    'name email designation photo address number githubLink linkedinLink'
-  );
+  // Select ALL profile and hero fields without restrictions
+  const user = await User.find();
 
   res.status(200).json({
     status: 'success',
@@ -38,12 +37,30 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
     'name',
     'email',
     'designation',
+    'address',
+    'number',
+    'location',
     'githubLink',
-    'linkedinLink'
+    'linkedinLink',
+    'github',
+    'linkedin',
+    'twitter',
+    'bio',
+    'heroLine1',
+    'heroLine2',
+    'marquee',
+    'openForWork',
+    'statusMessage',
+    'preferredRole',
+    'heroMedia',
+    'role'
   );
 
+  // If target userId is sent in body or params, use it, else fallback to logged in user
+  const targetId = req.params.id || req.body._id || req.body.id || req.user.id;
+
   if (req.file) {
-    const oldUser = await User.findById(req.user.id);
+    const oldUser = await User.findById(targetId);
     if (oldUser && oldUser.photo) {
       await deleteFromCloudinary(oldUser.photo, 'image');
     }
@@ -52,7 +69,7 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: 'portfolio_files',
-          public_id: `user_${req.user.id}`,
+          public_id: `user_${targetId}`,
           overwrite: true,
           invalidate: true
         },
@@ -66,11 +83,10 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
     });
 
     const cloudinaryResult = await uploadStream;
-
     filteredBody.photo = cloudinaryResult.secure_url;
   }
 
-  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+  const updatedUser = await User.findByIdAndUpdate(targetId, filteredBody, {
     returnDocument: 'after',
     runValidators: true
   });
@@ -86,7 +102,8 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('+password');
+  const targetId = req.params.id || req.body._id || req.body.id || req.user.id;
+  const user = await User.findById(targetId).select('+password');
 
   const isCurrentPasswordCorrect = await user.correctPassword(
     req.body.currentPassword,

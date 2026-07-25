@@ -36,7 +36,9 @@ exports.addSkill = catchAsync(async (req, res, next) => {
     'category',
     'proficiency',
     'impactScore',
-    'mlKeywords' // Pass keywords as an array from Postman/Frontend
+    'featured',
+    'isFeatured',
+    'mlKeywords'
   );
 
   const newSkill = await Skills.create(filteredBody);
@@ -54,6 +56,8 @@ exports.updateSkill = catchAsync(async (req, res, next) => {
     'category',
     'proficiency',
     'impactScore',
+    'featured',
+    'isFeatured',
     'mlKeywords'
   );
 
@@ -61,8 +65,8 @@ exports.updateSkill = catchAsync(async (req, res, next) => {
     req.params.id,
     filteredBody,
     {
-      returnDocument: 'after', // Returns the newly updated document instead of the old one
-      runValidators: true // Ensures the enum categories and max values are strictly followed
+      returnDocument: 'after',
+      runValidators: true
     }
   );
 

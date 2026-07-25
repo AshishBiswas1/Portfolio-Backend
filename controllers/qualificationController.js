@@ -15,9 +15,8 @@ const filterObj = (obj, ...allowedFields) => {
 };
 
 exports.getAllQualification = catchAsync(async (req, res, next) => {
-  const qualifications = await Qualification.find()
-    .select('educationLevel institution degree score duration')
-    .sort('-endYearNumeric');
+  // Select ALL qualification fields without field restrictions
+  const qualifications = await Qualification.find().sort('-endYearNumeric');
 
   res.status(200).json({
     status: 'success',
@@ -51,6 +50,7 @@ exports.addQualification = catchAsync(async (req, res, next) => {
     fieldOfStudy: req.body.fieldOfStudy,
     score: req.body.score,
     duration: req.body.duration,
+    yearRange: req.body.yearRange,
     description: req.body.description
   });
 
@@ -71,6 +71,7 @@ exports.updateQualification = catchAsync(async (req, res, next) => {
     'fieldOfStudy',
     'score',
     'duration',
+    'yearRange',
     'description'
   );
 

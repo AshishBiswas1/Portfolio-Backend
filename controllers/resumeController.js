@@ -65,6 +65,14 @@ exports.createResume = catchAsync(async (req, res, next) => {
     'contact.location',
     'socialLinks.github',
     'socialLinks.linkedin',
+    'location',
+    'email',
+    'phone',
+    'github',
+    'linkedin',
+    'summary',
+    'url',
+    'resumeUrl',
     'defaultSummary',
     'isActive'
   );
@@ -129,6 +137,14 @@ exports.updateResume = catchAsync(async (req, res, next) => {
     'contact.location',
     'socialLinks.github',
     'socialLinks.linkedin',
+    'location',
+    'email',
+    'phone',
+    'github',
+    'linkedin',
+    'summary',
+    'url',
+    'resumeUrl',
     'defaultSummary',
     'isActive'
   );

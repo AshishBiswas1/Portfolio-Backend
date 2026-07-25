@@ -4,34 +4,74 @@ const path = require('path');
 const { htmlToText } = require('html-to-text');
 
 const sendEmail = async (options) => {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD
-    }
-  });
+  let transporter;
 
+  // Use configured email service if credentials exist
+  if (process.env.EMAIL_USERNAME && process.env.EMAIL_PASSWORD) {
+    if (process.env.EMAIL_HOST) {
+      transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT || 587,
+        auth: {
+          user: process.env.EMAIL_USERNAME,
+          pass: process.env.EMAIL_PASSWORD
+        }
+      });
+    } else {
+      transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USERNAME,
+          pass: process.env.EMAIL_PASSWORD
+        }
+      });
+    }
+  } else {
+    // Ethereal / Dev test account fallback when credentials are not in .env yet
+    const testAccount = await nodemailer.createTestAccount();
+    transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      }
+    });
+  }
+
+  // Template directory is 'view/email' (singular view)
   const templatePath = path.join(
     __dirname,
-    `../views/email/${options.template}.pug`
+    `../view/email/${options.template}.pug`
   );
 
-  const html = pug.renderFile(templatePath, {
-    subject: options.subject,
-    ...options.data // Spread operator passes all custom variables right into Pug
-  });
+  let html;
+  try {
+    html = pug.renderFile(templatePath, {
+      subject: options.subject,
+      ...options.data
+    });
+  } catch (err) {
+    // Fallback HTML if pug render fails
+    const link = options.data?.resetURL || '#';
+    html = `<p>Hello ${options.data?.firstName || 'Admin'},</p><p>Reset your password using this link: <a href="${link}">${link}</a></p>`;
+  }
 
   const mailOptions = {
-    from: `Portfolio Hub <${process.env.EMAIL_USERNAME}>`,
-    to: options.to || options.email || process.env.EMAIL_USERNAME,
+    from: process.env.EMAIL_FROM || `Portfolio Admin <${process.env.EMAIL_USERNAME || 'admin@ashishbiswas.dev'}>`,
+    to: options.to || options.email,
     subject: options.subject,
-    html, // The rendered HTML content
-    text: htmlToText(html), // Automatic plain-text fallback for email clients
+    html,
+    text: htmlToText ? htmlToText(html) : html.replace(/<[^>]*>?/gm, ''),
     replyTo: options.replyTo || undefined
   };
 
-  await transporter.sendMail(mailOptions);
+  const info = await transporter.sendMail(mailOptions);
+  console.log(`[Email Dispatched] Subject: "${options.subject}" to ${options.email || options.to}`);
+  if (nodemailer.getTestMessageUrl && info) {
+    console.log(`[Email Test Preview URL]: ${nodemailer.getTestMessageUrl(info)}`);
+  }
 };
 
 module.exports = sendEmail;

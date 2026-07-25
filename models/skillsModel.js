@@ -36,6 +36,14 @@ const skillSchema = new mongoose.Schema(
       min: [1, 'Impact score must be at least 1'],
       max: [100, 'Impact score cannot exceed 100']
     },
+    featured: {
+      type: Boolean,
+      default: false
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false
+    },
     // Hidden tags your ML model uses to connect visitors to this skill
     mlKeywords: [
       {

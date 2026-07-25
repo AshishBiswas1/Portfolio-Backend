@@ -20,8 +20,8 @@ const clientOptions = {
 
 async function connectDB() {
   try {
-    await mongoose.connect(DB, clientOptions);
-    console.log('DB connection successful!');
+    const conn = await mongoose.connect(DB, clientOptions);
+    console.log(`DB connection successful! Connected to [Host: ${conn.connection.host}, Database: ${conn.connection.name}]`);
   } catch (err) {
     console.log('DB connection error:', err);
     process.exit(1);

@@ -16,6 +16,7 @@ const skillRouter = require('./routes/skillsRoute');
 const resumeRouter = require('./routes/resumeRoutes');
 const contactRouter = require('./routes/contactRoutes');
 const frameRouter = require('./routes/frameRoutes');
+const visitorRouter = require('./routes/visitorRoutes');
 
 const app = express();
 
@@ -24,7 +25,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.get('/', (req, res) => {
   res.status(200).json({
@@ -44,6 +46,7 @@ app.use('/api/v1/skill', skillRouter);
 app.use('/api/v1/resume', resumeRouter);
 app.use('/api/v1/constact', contactRouter);
 app.use('/api/v1/frames', frameRouter);
+app.use('/api/v1/visitor', visitorRouter);
 
 // Handle unhandled routes
 app.use((req, res, next) => {

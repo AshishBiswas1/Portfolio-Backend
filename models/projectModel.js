@@ -122,6 +122,42 @@ const projectSchema = new mongoose.Schema(
       default: 0,
       index: true
     },
+    score: {
+      type: Number,
+      default: 90
+    },
+    category: {
+      type: String,
+      trim: true,
+      default: 'Full Stack'
+    },
+    status: {
+      type: String,
+      trim: true,
+      default: 'Published'
+    },
+    tags: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
+    githubUrl: {
+      type: String,
+      trim: true
+    },
+    liveUrl: {
+      type: String,
+      trim: true
+    },
+    projectUrl: {
+      type: String,
+      trim: true
+    },
+    videoUrl: {
+      type: String,
+      trim: true
+    },
     mlConfidence: {
       type: Number,
       default: 0,

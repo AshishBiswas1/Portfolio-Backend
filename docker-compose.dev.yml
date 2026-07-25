@@ -8,6 +8,8 @@ services:
     command: npm run dev
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       PORT: 8000
       NODE_ENV: development
@@ -27,7 +29,7 @@ services:
   frontend:
     build:
       context: ../ashishbiswasportfolio
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: portfolio-frontend-dev
     restart: unless-stopped
     command: npm run dev

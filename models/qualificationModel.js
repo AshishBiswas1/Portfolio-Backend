@@ -61,6 +61,10 @@ const qualificationSchema = new mongoose.Schema(
         200,
         'A description must have less or equal than 200 characters'
       ]
+    },
+    yearRange: {
+      type: String,
+      trim: true
     }
   },
   {

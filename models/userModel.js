@@ -30,9 +30,15 @@ const userSchema = new mongoose.Schema(
     },
     confirmPassword: {
       type: String,
-      required: [true, 'Please confirm your password'],
+      required: [
+        function () {
+          return this.isModified('password');
+        },
+        'Please confirm your password'
+      ],
       validate: {
         validator: function (el) {
+          if (!this.isModified('password')) return true;
           return el === this.password;
         },
         message: 'Passwords are not the same!'
@@ -100,8 +106,58 @@ const userSchema = new mongoose.Schema(
       trim: true
     },
     passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    bio: {
+      type: String,
+      trim: true
+    },
+    heroLine1: {
+      type: String,
+      trim: true
+    },
+    heroLine2: {
+      type: String,
+      trim: true
+    },
+    location: {
+      type: String,
+      trim: true
+    },
+    github: {
+      type: String,
+      trim: true
+    },
+    linkedin: {
+      type: String,
+      trim: true
+    },
+    twitter: {
+      type: String,
+      trim: true
+    },
+    marquee: {
+      type: String,
+      trim: true
+    },
+    openForWork: {
+      type: Boolean,
+      default: false
+    },
+    statusMessage: {
+      type: String,
+      trim: true
+    },
+    preferredRole: {
+      type: String,
+      trim: true
+    },
+    heroMedia: {
+      type: String,
+      trim: true
+    },
     createdAt: {
       type: Date,
       default: Date.now
@@ -132,7 +188,7 @@ userSchema.pre('save', function () {
 });
 
 userSchema.pre(/^find/, function () {
-  this.find({ active: { $ne: false } });
+  this.find({ isActive: { $ne: false } });
 });
 
 // ==========================================
@@ -169,13 +225,15 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 // ==========================================
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
-
-  this.passwordResetToken = crypto
+  const hashedToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
 
+  this.passwordResetToken = hashedToken;
+  this.resetPasswordToken = hashedToken;
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 Minute Expiry
+  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
 
   return resetToken;
 };
