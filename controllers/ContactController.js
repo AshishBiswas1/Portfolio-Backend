@@ -102,14 +102,35 @@ exports.replyToContact = catchAsync(async (req, res, next) => {
 // 5. SUBMIT CONTACT FORM (Public Endpoint)
 // ==========================================
 exports.submitContactForm = catchAsync(async (req, res, next) => {
-  // Creating a new Contact document automatically triggers contactSchema.post('save')
-  // in contactModel.js, sending an email alert to the admin!
+  // 1. Save contact message to MongoDB Atlas database
   const newContact = await Contact.create({
     name: req.body.name,
     email: req.body.email,
     subject: req.body.subject,
     message: req.body.message
   });
+
+  // 2. Send EXACTLY 1 email notification alert to admin (portfolio owner)
+  try {
+    const adminEmail =
+      process.env.ADMIN_EMAIL ||
+      process.env.EMAIL_USERNAME ||
+      'biswasashish655@gmail.com';
+
+    await sendEmail({
+      email: adminEmail, // Recipient email address
+      replyTo: newContact.email, // Replying directly in inbox goes to the visitor
+      subject: `📬 Portfolio Message from ${newContact.name}: ${newContact.subject}`,
+      template: 'contactForm',
+      data: {
+        visitorName: newContact.name,
+        visitorEmail: newContact.email,
+        visitorMessage: newContact.message
+      }
+    });
+  } catch (emailErr) {
+    console.error('[Contact Form Email Dispatch Error]:', emailErr.message);
+  }
 
   res.status(201).json({
     status: 'success',
