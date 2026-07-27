@@ -9,14 +9,12 @@ const resumeSchema = new mongoose.Schema(
       trim: true
     },
     professionalTitle: {
-      // Notice how we open the array, THEN define the string properties
       type: [
         {
           type: String,
           trim: true
         }
       ],
-      // This custom validator ensures the array isn't submitted empty []
       validate: [
         (val) => val.length > 0,
         'Please provide at least one professional title (e.g., Full Stack Developer)'
@@ -37,10 +35,69 @@ const resumeSchema = new mongoose.Schema(
       linkedin: { type: String }
     },
 
-    // 2. THE CLOUDINARY PDF LINK
+    // 2. EXECUTIVE BRANDING & EXTENDED METADATA
+    tagline: { type: String, trim: true },
+    headline: { type: String, trim: true },
+    preferredRole: { type: String, trim: true },
+    yearsOfExperience: { type: String, trim: true },
+    availabilityStatus: { type: String, trim: true },
+    preferredWorkMode: { type: String, trim: true },
+    website: { type: String, trim: true },
+    leetcode: { type: String, trim: true },
+    kaggle: { type: String, trim: true },
+    twitter: { type: String, trim: true },
+    coreCompetencies: [{ type: String, trim: true }],
+    certifications: [
+      {
+        name: { type: String, trim: true },
+        issuer: { type: String, trim: true },
+        issueDate: { type: String, trim: true },
+        credentialUrl: { type: String, trim: true }
+      }
+    ],
+    languages: [
+      {
+        language: { type: String, trim: true },
+        proficiency: { type: String, trim: true }
+      }
+    ],
+    lastUpdatedDate: { type: String, trim: true },
+    downloadCount: { type: Number, default: 0 },
+
+    // 3. MODEL REFERENCES (Dynamically populates from respective collections)
+    objective: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Objective'
+    },
+    projects: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project'
+      }
+    ],
+    experiences: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Internship'
+      }
+    ],
+    skills: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Skills'
+      }
+    ],
+    qualifications: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Qualification'
+      }
+    ],
+
+    // 4. THE CLOUDINARY PDF LINK
     resumePdf: {
       type: String,
-      default: null // Will be populated by our Cloudinary upload stream
+      default: null
     },
     url: {
       type: String,
@@ -51,8 +108,7 @@ const resumeSchema = new mongoose.Schema(
       default: null
     },
 
-    // 3. THE SUMMARIES
-    // The fallback summary if the ML model hasn't figured out what the visitor wants yet
+    // 5. THE SUMMARIES
     defaultSummary: {
       type: String,
       required: [true, 'Please provide a default summary']
@@ -60,9 +116,6 @@ const resumeSchema = new mongoose.Schema(
     summary: {
       type: String
     },
-
-    // The ML-Driven Array: Your Next.js app will analyze the visitor,
-    // find the matching audience in this array, and display that specific text!
     targetedSummaries: [
       {
         audience: {
@@ -86,8 +139,7 @@ const resumeSchema = new mongoose.Schema(
       }
     ],
 
-    // 4. VERSION CONTROL
-    // Allows you to have multiple resumes in the database, but only show the active one
+    // 6. VERSION CONTROL
     isActive: {
       type: Boolean,
       default: true
@@ -98,11 +150,7 @@ const resumeSchema = new mongoose.Schema(
   }
 );
 
-// ==========================================
-// DOCUMENT MIDDLEWARE
-// ==========================================
-// If you create a new resume and set it to active, this hook automatically
-// sets all your older resumes to inactive, so you only ever have one active at a time!
+// Pre-save middleware for single active resume
 resumeSchema.pre('save', async function () {
   if (this.isActive) {
     await this.constructor.updateMany(

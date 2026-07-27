@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.route('/').get(skillController.getTopSkills);
 router.route('/all').get(skillController.getAllSkills);
+router.route('/:id/view').patch(skillController.incrementSkillViews).post(skillController.incrementSkillViews);
 
 router.use(authController.protect, authController.restrictTo('admin'));
 

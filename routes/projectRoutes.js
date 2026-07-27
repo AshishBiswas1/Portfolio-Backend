@@ -8,6 +8,7 @@ const router = express.Router();
 router.route('/').get(projectController.getTopProjects);
 router.route('/all').get(projectController.getAllProjects);
 router.route('/:id').get(projectController.getProject);
+router.route('/:id/view').patch(projectController.incrementProjectViews).post(projectController.incrementProjectViews);
 
 router.use(authController.protect, authController.restrictTo('admin'));
 

@@ -1,6 +1,7 @@
 const Contact = require('../models/contactModel');
 const AppError = require('../util/appError');
 const catchAsync = require('../util/catchAsync');
+const sendEmail = require('../util/email');
 
 // ==========================================
 // 1. GET ALL CONTACTS
@@ -101,6 +102,8 @@ exports.replyToContact = catchAsync(async (req, res, next) => {
 // 5. SUBMIT CONTACT FORM (Public Endpoint)
 // ==========================================
 exports.submitContactForm = catchAsync(async (req, res, next) => {
+  // Creating a new Contact document automatically triggers contactSchema.post('save')
+  // in contactModel.js, sending an email alert to the admin!
   const newContact = await Contact.create({
     name: req.body.name,
     email: req.body.email,

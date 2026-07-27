@@ -8,6 +8,7 @@ const router = express.Router();
 router.route('/').get(internshipController.getTopInternships);
 router.route('/all').get(internshipController.getAllInternships);
 router.route('/:id').get(internshipController.getInternship);
+router.route('/:id/view').patch(internshipController.incrementInternshipViews).post(internshipController.incrementInternshipViews);
 
 router.use(authController.protect, authController.restrictTo('admin'));
 

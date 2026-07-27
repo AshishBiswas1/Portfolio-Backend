@@ -36,6 +36,11 @@ const skillSchema = new mongoose.Schema(
       min: [1, 'Impact score must be at least 1'],
       max: [100, 'Impact score cannot exceed 100']
     },
+    views: {
+      type: Number,
+      default: 0,
+      index: true
+    },
     featured: {
       type: Boolean,
       default: false

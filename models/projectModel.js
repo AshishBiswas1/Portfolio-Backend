@@ -126,6 +126,11 @@ const projectSchema = new mongoose.Schema(
       type: Number,
       default: 90
     },
+    views: {
+      type: Number,
+      default: 0,
+      index: true
+    },
     category: {
       type: String,
       trim: true,

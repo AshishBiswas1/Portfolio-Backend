@@ -209,3 +209,20 @@ exports.deleteInternship = catchAsync(async (req, res, next) => {
     data: null
   });
 });
+
+exports.incrementInternshipViews = catchAsync(async (req, res, next) => {
+  const updatedInternship = await Internship.findByIdAndUpdate(
+    req.params.id,
+    { $inc: { views: 1 } },
+    { returnDocument: 'after' }
+  );
+
+  if (!updatedInternship) {
+    return next(new AppError('No internship found with that ID', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    internship: updatedInternship
+  });
+});

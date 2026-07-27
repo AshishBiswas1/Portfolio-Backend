@@ -68,13 +68,23 @@ contactSchema.pre('save', function () {
 // ==========================================
 // POST-HOOKS / MIDDLEWARES
 // ==========================================
-// AUTOMATED EMAIL ALERT: Triggers the moment a message is successfully saved to the DB
+// AUTOMATED EMAIL ALERT: Triggers the moment a new message is successfully saved to the DB
 contactSchema.post('save', async function (doc) {
+  // Guard: Only send email alert when a NEW message document is created
+  // Do NOT send email alerts when admin marks the message as read or updates repliedAt
+  if (doc.__isModifiedRead) return;
+
   try {
+    const adminEmail =
+      process.env.ADMIN_EMAIL ||
+      process.env.EMAIL_USERNAME ||
+      'biswasashish655@gmail.com';
+
     await sendEmail({
+      email: adminEmail, // Recipient email address (Portfolio Owner)
       replyTo: doc.email, // Pressing reply in your inbox goes straight to the visitor!
-      subject: `📬 Portfolio Message: ${doc.subject}`,
-      template: 'contactForm', // Executes your views/email/contactForm.pug template
+      subject: `📬 Portfolio Message from ${doc.name}: ${doc.subject}`,
+      template: 'contactForm', // Executes your view/email/contactForm.pug template
       data: {
         visitorName: doc.name,
         visitorEmail: doc.email,
@@ -82,8 +92,6 @@ contactSchema.post('save', async function (doc) {
       }
     });
   } catch (err) {
-    // We log the error but call next() so the API request doesn't crash
-    // if Gmail has a temporary connection issue. The message remains safe in MongoDB!
     console.error(
       'Automated contact form notification email failed to send:',
       err.message

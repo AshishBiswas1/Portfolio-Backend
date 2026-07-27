@@ -1,4 +1,10 @@
 const Resume = require('../models/resumeModel');
+const Objective = require('../models/objectiveModel');
+const Project = require('../models/projectModel');
+const Internship = require('../models/internshipModel');
+const Skills = require('../models/skillsModel');
+const Qualification = require('../models/qualificationModel');
+
 const catchAsync = require('../util/catchAsync');
 const AppError = require('../util/appError');
 const filterObj = require('../util/filterObj');
@@ -7,46 +13,121 @@ const mongoose = require('mongoose');
 
 const { deleteFromCloudinary } = require('../util/cloudinaryHelper');
 
-// ==========================================
-// 1. THE MACHINE LEARNING ENDPOINT
-// ==========================================
-// Your Next.js app calls this route with the visitor's detected intent:
-// GET /api/v1/resume/active?audience=Backend
-exports.getActiveResume = catchAsync(async (req, res, next) => {
-  // 1. Find the currently active resume
-  const activeResume = await Resume.findOne({ isActive: true });
+// Helper to safely parse JSON strings or arrays
+function parseJsonArray(val) {
+  if (!val) return undefined;
+  if (Array.isArray(val)) return val;
+  try {
+    return JSON.parse(val);
+  } catch (err) {
+    return undefined;
+  }
+}
 
+// ==========================================
+// 1. GET ACTIVE RESUME (COMPLIANT WITH MODEL REFERENCES & POPULATION)
+// ==========================================
+exports.getActiveResume = catchAsync(async (req, res, next) => {
+  let activeResume = await Resume.findOne({ isActive: true })
+    .populate('objective')
+    .populate('projects')
+    .populate('experiences')
+    .populate('skills')
+    .populate('qualifications');
+
+  // If no resume document exists yet, fallback to building one
   if (!activeResume) {
-    return next(new AppError('No active resume found', 404));
+    activeResume = await Resume.findOne().sort({ createdAt: -1 })
+      .populate('objective')
+      .populate('projects')
+      .populate('experiences')
+      .populate('skills')
+      .populate('qualifications');
   }
 
-  // 2. Determine which summary to show
+  // Populate dynamic references from their respective models if null/empty
+  let activeObjectiveDoc = activeResume?.objective;
+  if (!activeObjectiveDoc) {
+    activeObjectiveDoc = await Objective.findOne({ isActive: true }) || await Objective.findOne();
+  }
+
+  let projectsList = activeResume?.projects && activeResume.projects.length > 0
+    ? activeResume.projects
+    : await Project.find().sort({ views: -1, createdAt: -1 });
+
+  let experiencesList = activeResume?.experiences && activeResume.experiences.length > 0
+    ? activeResume.experiences
+    : await Internship.find().sort({ views: -1, createdAt: -1 });
+
+  let skillsList = activeResume?.skills && activeResume.skills.length > 0
+    ? activeResume.skills
+    : await Skills.find().sort({ proficiency: -1 });
+
+  let qualificationsList = activeResume?.qualifications && activeResume.qualifications.length > 0
+    ? activeResume.qualifications
+    : await Qualification.find();
+
+  // Determine ML-targeted summary
   const requestedAudience = req.query.audience;
-  let displaySummary = activeResume.defaultSummary;
+  let displaySummary = activeResume?.defaultSummary || activeResume?.summary || activeObjectiveDoc?.objectiveText || "";
 
-  // If the ML model passed an audience, try to find the matching targeted summary
-  if (requestedAudience && activeResume.targetedSummaries) {
+  if (requestedAudience && activeResume?.targetedSummaries) {
     const targetedMatch = activeResume.targetedSummaries.find(
-      (s) => s.audience.toLowerCase() === requestedAudience.toLowerCase()
+      (s) => s.audience && s.audience.toLowerCase() === requestedAudience.toLowerCase()
     );
-
     if (targetedMatch) {
       displaySummary = targetedMatch.text;
     }
   }
 
-  // 3. Send back a clean, compiled payload for the frontend
   res.status(200).json({
     status: 'success',
     data: {
       resume: {
-        fullName: activeResume.fullName,
-        professionalTitle: activeResume.professionalTitle,
-        contact: activeResume.contact,
-        socialLinks: activeResume.socialLinks,
-        resumePdf: activeResume.resumePdf,
-        // The frontend doesn't need the whole array, just the specific summary!
-        summary: displaySummary
+        _id: activeResume?._id,
+        id: activeResume?._id,
+        fullName: activeResume?.fullName || "Ashish Biswas",
+        professionalTitle: activeResume?.professionalTitle || ["Full Stack Developer"],
+        contact: activeResume?.contact || { email: activeResume?.email || "", phone: activeResume?.phone || "", location: activeResume?.location || "" },
+        location: activeResume?.location || activeResume?.contact?.location || "",
+        email: activeResume?.email || activeResume?.contact?.email || "",
+        phone: activeResume?.phone || activeResume?.contact?.phone || "",
+        github: activeResume?.github || activeResume?.socialLinks?.github || "",
+        linkedin: activeResume?.linkedin || activeResume?.socialLinks?.linkedin || "",
+        socialLinks: activeResume?.socialLinks || { github: activeResume?.github || "", linkedin: activeResume?.linkedin || "" },
+        
+        // Executive Metadata Fields
+        tagline: activeResume?.tagline || "",
+        headline: activeResume?.headline || "",
+        preferredRole: activeResume?.preferredRole || "",
+        yearsOfExperience: activeResume?.yearsOfExperience || "4+ Years",
+        availabilityStatus: activeResume?.availabilityStatus || "Open for Full-time Roles",
+        preferredWorkMode: activeResume?.preferredWorkMode || "Remote / Hybrid",
+        website: activeResume?.website || "https://ashishbiswas.dev",
+        leetcode: activeResume?.leetcode || "",
+        kaggle: activeResume?.kaggle || "",
+        twitter: activeResume?.twitter || "",
+        coreCompetencies: activeResume?.coreCompetencies || [],
+        certifications: activeResume?.certifications || [],
+        languages: activeResume?.languages || [],
+        lastUpdatedDate: activeResume?.lastUpdatedDate || "July 2026",
+        downloadCount: activeResume?.downloadCount || 0,
+
+        // Referenced Models Output (Retrieved directly from respective models)
+        objectiveDoc: activeObjectiveDoc,
+        objectiveText: activeObjectiveDoc?.objectiveText || displaySummary,
+        projects: projectsList,
+        experiences: experiencesList,
+        skills: skillsList,
+        qualifications: qualificationsList,
+
+        resumePdf: activeResume?.resumePdf || activeResume?.url || activeResume?.resumeUrl,
+        url: activeResume?.url || activeResume?.resumePdf,
+        resumeUrl: activeResume?.resumeUrl || activeResume?.resumePdf,
+        defaultSummary: activeResume?.defaultSummary || displaySummary,
+        summary: displaySummary,
+        targetedSummaries: activeResume?.targetedSummaries || [],
+        isActive: activeResume?.isActive ?? true
       }
     }
   });
@@ -74,37 +155,42 @@ exports.createResume = catchAsync(async (req, res, next) => {
     'url',
     'resumeUrl',
     'defaultSummary',
-    'isActive'
+    'isActive',
+    'tagline',
+    'headline',
+    'preferredRole',
+    'yearsOfExperience',
+    'availabilityStatus',
+    'preferredWorkMode',
+    'website',
+    'leetcode',
+    'kaggle',
+    'twitter',
+    'lastUpdatedDate',
+    'downloadCount',
+    'objective'
   );
 
-  if (req.body.targetedSummaries) {
-    try {
-      // JSON.parse converts the raw Postman string into a real JavaScript Array
-      const parsedArray = JSON.parse(req.body.targetedSummaries);
-
-      // Attach the real array to our filtered object BEFORE saving to Mongoose
-      filteredBody.targetedSummaries = parsedArray;
-    } catch (error) {
-      return next(
-        new AppError(
-          'targetedSummaries must be formatted as a valid JSON string',
-          400
-        )
-      );
-    }
-  }
+  // Parse arrays if sent as JSON strings
+  if (req.body.targetedSummaries) filteredBody.targetedSummaries = parseJsonArray(req.body.targetedSummaries) || [];
+  if (req.body.coreCompetencies) filteredBody.coreCompetencies = parseJsonArray(req.body.coreCompetencies) || req.body.coreCompetencies;
+  if (req.body.certifications) filteredBody.certifications = parseJsonArray(req.body.certifications) || req.body.certifications;
+  if (req.body.languages) filteredBody.languages = parseJsonArray(req.body.languages) || req.body.languages;
+  if (req.body.projects) filteredBody.projects = parseJsonArray(req.body.projects) || req.body.projects;
+  if (req.body.experiences) filteredBody.experiences = parseJsonArray(req.body.experiences) || req.body.experiences;
+  if (req.body.skills) filteredBody.skills = parseJsonArray(req.body.skills) || req.body.skills;
+  if (req.body.qualifications) filteredBody.qualifications = parseJsonArray(req.body.qualifications) || req.body.qualifications;
 
   const newResumeId = new mongoose.Types.ObjectId();
   filteredBody._id = newResumeId;
 
-  // Handle the PDF Upload exactly like the Internship certificate
   if (req.file) {
     const uploadStream = new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: 'portfolio_files',
           public_id: `resume_${newResumeId}`,
-          resource_type: 'auto' // Crucial for accepting PDFs!
+          resource_type: 'auto'
         },
         (error, result) => {
           if (error) return reject(new AppError('Failed to upload PDF', 500));
@@ -126,8 +212,6 @@ exports.createResume = catchAsync(async (req, res, next) => {
 });
 
 exports.updateResume = catchAsync(async (req, res, next) => {
-  // 1. Filter allowed top-level and nested dot-notation fields
-  // If you don't send a field in Postman, filterObj leaves it out, and the DB keeps its current value!
   const filteredBody = filterObj(
     req.body,
     'fullName',
@@ -146,52 +230,61 @@ exports.updateResume = catchAsync(async (req, res, next) => {
     'url',
     'resumeUrl',
     'defaultSummary',
-    'isActive'
+    'isActive',
+    'tagline',
+    'headline',
+    'preferredRole',
+    'yearsOfExperience',
+    'availabilityStatus',
+    'preferredWorkMode',
+    'website',
+    'leetcode',
+    'kaggle',
+    'twitter',
+    'lastUpdatedDate',
+    'downloadCount',
+    'objective'
   );
 
-  // 2. Fetch the target resume document
-  const resume = await Resume.findById(req.params.id);
+  // Parse arrays if sent as JSON strings
+  if (req.body.coreCompetencies) filteredBody.coreCompetencies = parseJsonArray(req.body.coreCompetencies) || req.body.coreCompetencies;
+  if (req.body.certifications) filteredBody.certifications = parseJsonArray(req.body.certifications) || req.body.certifications;
+  if (req.body.languages) filteredBody.languages = parseJsonArray(req.body.languages) || req.body.languages;
+  if (req.body.projects) filteredBody.projects = parseJsonArray(req.body.projects) || req.body.projects;
+  if (req.body.experiences) filteredBody.experiences = parseJsonArray(req.body.experiences) || req.body.experiences;
+  if (req.body.skills) filteredBody.skills = parseJsonArray(req.body.skills) || req.body.skills;
+  if (req.body.qualifications) filteredBody.qualifications = parseJsonArray(req.body.qualifications) || req.body.qualifications;
+
+  let resume = await Resume.findById(req.params.id);
+  if (!resume) {
+    // Fallback: search for active resume if ID matches or find first
+    resume = await Resume.findOne({ isActive: true });
+  }
+
   if (!resume) {
     return next(new AppError('No resume found with that ID', 404));
   }
 
-  // 3. ULTRA-FLEXIBLE ARRAY UPDATE (targetedSummaries)
   if (req.body.targetedSummaries) {
-    try {
-      const updates = JSON.parse(req.body.targetedSummaries);
-
+    const updates = parseJsonArray(req.body.targetedSummaries);
+    if (updates && Array.isArray(updates)) {
       updates.forEach((updateItem) => {
-        // Find the existing summary using either its unique _id OR its audience name
         const existingSummary = resume.targetedSummaries.find(
           (subDoc) =>
-            (updateItem._id &&
-              subDoc._id.toString() === updateItem._id.toString()) ||
-            (updateItem.audience &&
-              subDoc.audience.toLowerCase() ===
-                updateItem.audience.toLowerCase())
+            (updateItem._id && subDoc._id.toString() === updateItem._id.toString()) ||
+            (updateItem.audience && subDoc.audience.toLowerCase() === updateItem.audience.toLowerCase())
         );
 
         if (existingSummary) {
-          // Update each field inside the sub-document separately only if provided
-          if (updateItem.audience)
-            existingSummary.audience = updateItem.audience;
+          if (updateItem.audience) existingSummary.audience = updateItem.audience;
           if (updateItem.text) existingSummary.text = updateItem.text;
         } else {
-          // If it doesn't exist at all, dynamically push it as a new entry
           resume.targetedSummaries.push(updateItem);
         }
       });
-    } catch (error) {
-      return next(
-        new AppError(
-          'targetedSummaries must be formatted as a valid JSON string',
-          400
-        )
-      );
     }
   }
 
-  // 4. Handle Cloudinary PDF update (only updates if a new file is attached)
   if (req.file) {
     if (resume && resume.resumePdf) {
       await deleteFromCloudinary(resume.resumePdf, 'raw');
@@ -218,7 +311,6 @@ exports.updateResume = catchAsync(async (req, res, next) => {
     resume.resumePdf = cloudinaryResult.secure_url;
   }
 
-  // 5. Apply the standard modifications and save
   resume.set(filteredBody);
   await resume.save();
 

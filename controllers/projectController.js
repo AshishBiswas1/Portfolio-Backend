@@ -162,3 +162,20 @@ exports.deleteProject = catchAsync(async (req, res, next) => {
     data: null
   });
 });
+
+exports.incrementProjectViews = catchAsync(async (req, res, next) => {
+  const project = await Project.findByIdAndUpdate(
+    req.params.id,
+    { $inc: { views: 1 } },
+    { returnDocument: 'after' }
+  );
+
+  if (!project) {
+    return next(new AppError('No project found with that ID', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: { project }
+  });
+});

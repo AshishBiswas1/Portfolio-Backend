@@ -92,3 +92,20 @@ exports.deleteSkill = catchAsync(async (req, res, next) => {
     data: null
   });
 });
+
+exports.incrementSkillViews = catchAsync(async (req, res, next) => {
+  const updatedSkill = await Skills.findByIdAndUpdate(
+    req.params.id,
+    { $inc: { views: 1 } },
+    { returnDocument: 'after' }
+  );
+
+  if (!updatedSkill) {
+    return next(new AppError('No skill found with that ID', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    updatedSkill
+  });
+});
