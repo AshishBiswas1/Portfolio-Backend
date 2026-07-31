@@ -27,6 +27,17 @@ const contactSchema = new mongoose.Schema(
       required: [true, 'A message body cannot be empty.'],
       trim: true
     },
+    mlAnalysis: {
+      intent: {
+        type: String,
+        enum: ['Hiring/Recruiter', 'Project Work', 'General Question', 'Spam'],
+        default: 'General Question'
+      },
+      confidenceScore: { type: Number, default: 0.85 },
+      priority: { type: String, enum: ['High', 'Medium', 'Low'], default: 'Medium' },
+      sentimentScore: { type: Number, default: 0.5 },
+      keywords: [{ type: String }]
+    },
     isRead: {
       type: Boolean,
       default: false

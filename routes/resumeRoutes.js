@@ -5,6 +5,7 @@ const upload = require('../util/uploadMiddleware');
 
 const router = express.Router();
 
+router.route('/targeted-summary').get(resumeController.getTargetedResumeSummary);
 router.route('/').get(resumeController.getActiveResume);
 
 router.use(authController.protect, authController.restrictTo('admin'));

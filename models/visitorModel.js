@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const visitorSchema = new mongoose.Schema({
+  sessionId: {
+    type: String,
+    trim: true,
+    index: true
+  },
   ip: {
     type: String,
     trim: true,
@@ -39,6 +44,7 @@ const visitorSchema = new mongoose.Schema({
 visitorSchema.index({ createdAt: -1 });
 visitorSchema.index({ source: 1 });
 visitorSchema.index({ device: 1 });
+visitorSchema.index({ sessionId: 1 });
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 

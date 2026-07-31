@@ -2,6 +2,7 @@ const AppError = require('../util/appError');
 const catchAsync = require('../util/catchAsync');
 const Skills = require('../models/skillsModel');
 const filterObj = require('../util/filterObj');
+const pythonMlClient = require('../util/pythonMlClient');
 
 exports.getTopSkills = catchAsync(async (req, res, next) => {
   let query = Skills.find();
@@ -107,5 +108,21 @@ exports.incrementSkillViews = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     updatedSkill
+  });
+});
+
+exports.getRoleMatchedSkills = catchAsync(async (req, res, next) => {
+  const sessionId = req.query.session_id || req.headers['x-session-id'];
+  const role = req.query.role ? req.query.role.toLowerCase() : null;
+  const skills = await Skills.find();
+  const rawList = skills.map((s) => s.toObject());
+
+  const rankedSkills = await pythonMlClient.rankSkills(rawList, role, sessionId);
+
+  res.status(200).json({
+    status: 'success',
+    role: role || 'autonomous',
+    results: rankedSkills.length,
+    skills: rankedSkills
   });
 });

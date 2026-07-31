@@ -12,6 +12,7 @@ const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
 
 const { deleteFromCloudinary } = require('../util/cloudinaryHelper');
+const pythonMlClient = require('../util/pythonMlClient');
 
 // Helper to safely parse JSON strings or arrays
 function parseJsonArray(val) {
@@ -330,5 +331,16 @@ exports.deleteResume = catchAsync(async (req, res, next) => {
   res.status(204).json({
     status: 'success',
     data: null
+  });
+});
+
+exports.getTargetedResumeSummary = catchAsync(async (req, res, next) => {
+  const sessionId = req.query.session_id || req.headers['x-session-id'];
+  const role = req.query.role ? req.query.role.toLowerCase() : null;
+  const summaryData = await pythonMlClient.getTargetedSummary(role, sessionId);
+
+  res.status(200).json({
+    status: 'success',
+    data: summaryData
   });
 });

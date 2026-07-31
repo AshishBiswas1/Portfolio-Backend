@@ -12,6 +12,7 @@ cloudinary.config({
 });
 
 const { deleteFromCloudinary } = require('../util/cloudinaryHelper');
+const pythonMlClient = require('../util/pythonMlClient');
 
 const uploadToCloudinary = (fileBuffer, folder, publicId) => {
   return new Promise((resolve, reject) => {
@@ -54,7 +55,11 @@ exports.getTopInternships = catchAsync(async (req, res, next) => {
 });
 
 exports.getInternship = catchAsync(async (req, res, next) => {
-  const internship = await Internship.findById(req.params.id);
+  const internship = await Internship.findByIdAndUpdate(
+    req.params.id,
+    { $inc: { views: 1 } },
+    { returnDocument: 'after' }
+  );
 
   if (!internship) {
     return next(new AppError('Could not find the internship', 404));
@@ -224,5 +229,21 @@ exports.incrementInternshipViews = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     internship: updatedInternship
+  });
+});
+
+exports.getRoleMatchedInternships = catchAsync(async (req, res, next) => {
+  const sessionId = req.query.session_id || req.headers['x-session-id'];
+  const role = req.query.role ? req.query.role.toLowerCase() : null;
+  const internships = await Internship.find();
+  const rawList = internships.map((item) => item.toObject());
+
+  const rankedInternships = await pythonMlClient.rankInternships(rawList, role, sessionId);
+
+  res.status(200).json({
+    status: 'success',
+    role: role || 'autonomous',
+    result: rankedInternships.length,
+    internships: rankedInternships
   });
 });

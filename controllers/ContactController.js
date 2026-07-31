@@ -2,12 +2,13 @@ const Contact = require('../models/contactModel');
 const AppError = require('../util/appError');
 const catchAsync = require('../util/catchAsync');
 const sendEmail = require('../util/email');
+const pythonMlClient = require('../util/pythonMlClient');
 
 // ==========================================
 // 1. GET ALL CONTACTS
 // ==========================================
 exports.getAllContacts = catchAsync(async (req, res, next) => {
-  const contacts = await Contact.find();
+  const contacts = await Contact.find().sort('-createdAt');
 
   res.status(200).json({
     status: 'success',
@@ -26,7 +27,6 @@ exports.getContact = catchAsync(async (req, res, next) => {
     return next(new AppError('No message found with that ID', 404));
   }
 
-  // Smart Automation: If the message hasn't been read yet, trigger our model's instance method
   if (!contact.isRead) {
     await contact.markAsRead();
   }
@@ -54,33 +54,29 @@ exports.deleteContact = catchAsync(async (req, res, next) => {
 });
 
 // ==========================================
-// 4. REPLY TO CONTACT
+// 4. REPLY TO CONTACT (Triggers Model 2 Online Learning Feedback)
 // ==========================================
 exports.replyToContact = catchAsync(async (req, res, next) => {
   const { message, subject } = req.body;
 
-  // 1) Guard Rail: Ensure the admin actually wrote a response body
   if (!message || message.trim() === '') {
     return next(
       new AppError('Please provide both subject and message for the reply', 400)
     );
   }
 
-  // 2. Fetch target visitor details from the database
   const contact = await Contact.findById(req.params.id);
 
   if (!contact) {
     return next(new AppError('No message found with that ID', 404));
   }
 
-  // 3. Fallback to an automated thread reference subject line if left blank
   const replySubject = subject || `Reply for: ${contact.subject}`;
 
-  // 4. Execute the mail delivery pipeline directly to the visitor's email inbox
   await sendEmail({
-    email: contact.email, // Sent directly to the visitor
+    email: contact.email,
     subject: replySubject,
-    template: 'adminReply', // Executes a clean template layout
+    template: 'adminReply',
     data: {
       firstName: contact.name,
       originalMessage: contact.message,
@@ -88,7 +84,15 @@ exports.replyToContact = catchAsync(async (req, res, next) => {
     }
   });
 
-  // 5. Update state parameters on the document to track administrative engagement
+  // ─── MODEL 2 ONLINE INCREMENTAL LEARNING FEEDBACK (partial_fit) ───
+  try {
+    const feedbackText = `${contact.subject} ${contact.message}`;
+    const intentLabel = contact.mlAnalysis?.intent || 'Hiring/Recruiter';
+    await pythonMlClient.sendFeedback(feedbackText, intentLabel);
+  } catch (mlErr) {
+    console.error('[Model 2 Feedback Error]:', mlErr.message);
+  }
+
   contact.repliedAt = Date.now();
   await contact.save({ validateBeforeSave: false });
 
@@ -99,18 +103,22 @@ exports.replyToContact = catchAsync(async (req, res, next) => {
 });
 
 // ==========================================
-// 5. SUBMIT CONTACT FORM (Public Endpoint)
+// 5. SUBMIT CONTACT FORM (Public Endpoint + Python Model 2 Inference)
 // ==========================================
 exports.submitContactForm = catchAsync(async (req, res, next) => {
-  // 1. Save contact message to MongoDB Atlas database
+  // ─── MODEL 2 INFERENCE: Delegate to Python ML Service ───
+  const mlAnalysis = await pythonMlClient.predictIntent(req.body.subject, req.body.message);
+
+  // 1. Save contact message with ML Insights to MongoDB Atlas
   const newContact = await Contact.create({
     name: req.body.name,
     email: req.body.email,
     subject: req.body.subject,
-    message: req.body.message
+    message: req.body.message,
+    mlAnalysis
   });
 
-  // 2. Send EXACTLY 1 email notification alert to admin (portfolio owner)
+  // 2. Send email notification alert to admin with ML priority subject line
   try {
     const adminEmail =
       process.env.ADMIN_EMAIL ||
@@ -118,14 +126,16 @@ exports.submitContactForm = catchAsync(async (req, res, next) => {
       'biswasashish655@gmail.com';
 
     await sendEmail({
-      email: adminEmail, // Recipient email address
-      replyTo: newContact.email, // Replying directly in inbox goes to the visitor
-      subject: `📬 Portfolio Message from ${newContact.name}: ${newContact.subject}`,
+      email: adminEmail,
+      replyTo: newContact.email,
+      subject: `[${mlAnalysis.priority} Priority - ${mlAnalysis.intent}] Portfolio Message from ${newContact.name}`,
       template: 'contactForm',
       data: {
         visitorName: newContact.name,
         visitorEmail: newContact.email,
-        visitorMessage: newContact.message
+        visitorMessage: newContact.message,
+        intent: mlAnalysis.intent,
+        priority: mlAnalysis.priority
       }
     });
   } catch (emailErr) {

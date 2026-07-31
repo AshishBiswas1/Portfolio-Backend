@@ -5,6 +5,7 @@ const upload = require('../util/uploadMiddleware');
 
 const router = express.Router();
 
+router.route('/match').get(internshipController.getRoleMatchedInternships);
 router.route('/').get(internshipController.getTopInternships);
 router.route('/all').get(internshipController.getAllInternships);
 router.route('/:id').get(internshipController.getInternship);

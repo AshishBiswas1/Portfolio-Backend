@@ -4,6 +4,7 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
+router.route('/match').get(skillController.getRoleMatchedSkills);
 router.route('/').get(skillController.getTopSkills);
 router.route('/all').get(skillController.getAllSkills);
 router.route('/:id/view').patch(skillController.incrementSkillViews).post(skillController.incrementSkillViews);

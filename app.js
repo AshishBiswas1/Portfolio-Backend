@@ -47,6 +47,7 @@ app.use('/api/v1/resume', resumeRouter);
 app.use('/api/v1/constact', contactRouter);
 app.use('/api/v1/frames', frameRouter);
 app.use('/api/v1/visitor', visitorRouter);
+app.use('/api/v1/telemetry', visitorRouter);
 
 // Handle unhandled routes
 app.use((req, res, next) => {

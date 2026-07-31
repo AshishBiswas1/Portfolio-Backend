@@ -1,4 +1,19 @@
 services:
+  ml-service:
+    build:
+      context: ../Portfolio-ML-Service
+      dockerfile: Dockerfile
+    container_name: portfolio-ml-service-dev
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+    networks:
+      - portfolio-network-dev
+    volumes:
+      - ../Portfolio-ML-Service:/app
+
   backend:
     build:
       context: .
@@ -13,6 +28,7 @@ services:
     environment:
       PORT: 8000
       NODE_ENV: development
+      PYTHON_ML_SERVICE_URL: http://ml-service:5000
       DATABASE: ${DATABASE}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:-thisismyportfolioandonlyIhavetheaccesstomakechangestoit}
@@ -20,6 +36,8 @@ services:
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    depends_on:
+      - ml-service
     networks:
       - portfolio-network-dev
     volumes:
@@ -40,6 +58,7 @@ services:
       NODE_ENV: development
     depends_on:
       - backend
+      - ml-service
     networks:
       - portfolio-network-dev
     volumes:

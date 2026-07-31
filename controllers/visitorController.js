@@ -1,5 +1,7 @@
 const Visitor = require('../models/visitorModel');
 const catchAsync = require('../util/catchAsync');
+const pythonMlClient = require('../util/pythonMlClient');
+const { autonomouslyPersistMLDecisionsToDB } = require('../util/autonomousMlDbUpdater');
 
 // Helper to categorize traffic source from referrer string
 function detectSource(referrer, querySource) {
@@ -33,7 +35,7 @@ function detectDevice(userAgent) {
   return 'Desktop';
 }
 
-// 1. Log a new visitor pageview hit to MongoDB
+// 1. Log a new visitor pageview hit to MongoDB (ONLY if session_id is unique) & Autonomously trigger Python ML DB updates
 exports.trackVisitor = catchAsync(async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
   const userAgent = req.headers['user-agent'] || '';
@@ -41,19 +43,49 @@ exports.trackVisitor = catchAsync(async (req, res, next) => {
   const source = detectSource(referrer, req.body.source);
   const device = detectDevice(userAgent);
   const path = req.body.path || '/';
+  const sessionId = req.body.session_id || req.headers['x-session-id'] || 'sess_visitor';
+  const technologies = req.body.technologies || [];
+  const dwellTimeSeconds = req.body.dwell_time_seconds || 1.0;
 
-  const newVisitor = await Visitor.create({
-    ip,
-    userAgent,
-    path,
-    referrer,
-    source,
-    device,
-  });
+  // Check if this session has already been recorded
+  let existingVisitor = null;
+  if (sessionId && sessionId !== 'sess_visitor') {
+    existingVisitor = await Visitor.findOne({ sessionId });
+  }
 
-  res.status(201).json({
+  let visitorDoc = existingVisitor;
+  let isNewSession = false;
+
+  // ONLY increment visitor count / create DB record if session is UNIQUE
+  if (!existingVisitor) {
+    visitorDoc = await Visitor.create({
+      sessionId,
+      ip,
+      userAgent,
+      path,
+      referrer,
+      source,
+      device,
+    });
+    isNewSession = true;
+  }
+
+  // ─── AUTONOMOUS ML PERSISTENCE ───
+  // Send telemetry to Python ML Microservice & autonomously update MongoDB values
+  pythonMlClient.trackTelemetry(sessionId, path, technologies, dwellTimeSeconds)
+    .then((mlRes) => {
+      const inferredRole = mlRes?.persona?.inferred_role;
+      const interestScores = mlRes?.persona?.interest_scores;
+      if (inferredRole) {
+        autonomouslyPersistMLDecisionsToDB(inferredRole, interestScores);
+      }
+    })
+    .catch((err) => console.error('[Telemetry ML Sync Warning]:', err.message));
+
+  res.status(isNewSession ? 201 : 200).json({
     status: 'success',
-    data: { visitor: newVisitor }
+    isNewSession,
+    data: { visitor: visitorDoc }
   });
 });
 
@@ -67,7 +99,7 @@ exports.getVisitorStats = catchAsync(async (req, res, next) => {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - daysBack);
 
-  // 1. Total visitors in range
+  // 1. Total unique session visitors in range
   const totalVisitors = await Visitor.countDocuments({
     createdAt: { $gte: startDate }
   });

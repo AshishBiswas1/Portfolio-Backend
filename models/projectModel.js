@@ -170,6 +170,16 @@ const projectSchema = new mongoose.Schema(
     },
     mlLastAnalyzed: {
       type: Date
+    },
+    embedding: {
+      type: [Number],
+      select: false
+    },
+    roleScores: {
+      fullstack: { type: Number, default: 90 },
+      aiml: { type: Number, default: 85 },
+      backend: { type: Number, default: 88 },
+      frontend: { type: Number, default: 85 }
     }
   },
   {
