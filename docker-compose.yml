@@ -37,14 +37,13 @@ services:
       - ml-service
     networks:
       - portfolio-network
-    volumes:
-      - .:/app
-      - /app/node_modules
 
   frontend:
     build:
       context: ../ashishbiswasportfolio
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
     container_name: portfolio-frontend
     restart: unless-stopped
     ports:
@@ -56,9 +55,6 @@ services:
       - ml-service
     networks:
       - portfolio-network
-    volumes:
-      - ../ashishbiswasportfolio:/app
-      - /app/node_modules
 
 networks:
   portfolio-network:
