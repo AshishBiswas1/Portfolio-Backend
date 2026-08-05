@@ -1,15 +1,43 @@
 extends baseEmail
 
+//- ============================================================
+//- adminReply.pug
+//- Sent to VISITOR when the admin replies from the dashboard.
+//- CHANGED: Admin's reply is now in a full message-box with a
+//- gold left-border so it is the undeniable visual focus.
+//- The original visitor message is relegated to a subtle
+//- quote-box below so context is preserved without competing.
+//- ============================================================
+
 block content
-  h2 Hello #{firstName},
-  p Thank you for reaching out through my portfolio website. Here is a response regarding your inquiry:
-  
-  // The Admin's dynamic custom typed response message block
-  .message-box(style="border-left-color: #0070f3; font-style: normal; margin-bottom: 30px;")
-    p(style="white-space: pre-line; color: #222222;") #{replyMessage}
-  
-  hr(style="border: 0; border-top: 1px solid #eee; margin: 20px 0;")
-  
-  p(style="font-size: 12px; color: #777777; font-style: italic;") For reference, your original message text was:
-  blockquote(style="border-left: 3px solid #ddd; padding-left: 15px; margin: 10px 0; color: #666666; font-size: 13px;") 
-    | "#{originalMessage}"
+  //- ── Eyebrow label ──
+  p.eyebrow
+    span.eyebrow-line
+    | Portfolio Response
+
+  //- ── Greeting ──
+  h2.email-heading
+    | Hello, 
+    em #{firstName}
+
+  p Thank you for reaching out through my portfolio. I have reviewed your message and wanted to respond personally.
+
+  //- ── Admin reply message box (visually prominent) ──
+  //- CHANGED: The admin's custom reply is the largest, most
+  //- visually weighted element — gold-bordered, light text on
+  //- dark surface so it reads instantly.
+  .message-box(style='margin-top: 22px; margin-bottom: 28px;')
+    span.message-label Reply
+    //- replyMessage is bound by the contact reply controller
+    p(style='white-space: pre-line; color: #F0EEE8; font-size: 15px; line-height: 1.8;') #{replyMessage}
+
+  hr.divider
+
+  //- ── Original message reference (de-emphasised) ──
+  //- CHANGED: Moved into a quote-box at lower visual weight so
+  //- it serves as context only, not competing with the reply.
+  p(style='font-family: "Courier New", Courier, monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(200,169,110,0.55); margin-bottom: 10px;') Your original message
+
+  .quote-box
+    //- originalMessage is bound by the contact reply controller
+    p "#{originalMessage}"

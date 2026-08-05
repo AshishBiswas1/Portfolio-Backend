@@ -127,8 +127,9 @@ exports.submitContactForm = catchAsync(async (req, res, next) => {
 
     await sendEmail({
       email: adminEmail,
+      from: `"Portfolio Contact Form" <${process.env.EMAIL_USERNAME || adminEmail}>`,
       replyTo: newContact.email,
-      subject: `[${mlAnalysis.priority} Priority - ${mlAnalysis.intent}] Portfolio Message from ${newContact.name}`,
+      subject: `Portfolio Contact Form: ${newContact.subject || 'New Message'}`,
       template: 'contactForm',
       data: {
         visitorName: newContact.name,

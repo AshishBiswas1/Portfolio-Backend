@@ -1,19 +1,50 @@
 extends baseEmail
 
+//- ============================================================
+//- contactForm.pug
+//- Sent to ADMIN when a visitor submits the contact form.
+//- CHANGED: Added eyebrow label, subject-band highlight for
+//- the visitor's subject, and message-box highlight for the
+//- message body so both are immediately visually prominent.
+//- ============================================================
+
 block content
-  h2 New Portfolio Message Alert!
-  p You have received a new inquiry from your website contact form.
-  
-  table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+  //- ── Eyebrow label ──
+  p.eyebrow
+    span.eyebrow-line
+    | Incoming Message
+
+  //- ── Heading ──
+  h2.email-heading
+    | New 
+    strong Contact
+    |  Inquiry
+
+  //- ── Sender meta-data rows ──
+  table(role='presentation', border='0', cellpadding='0', cellspacing='0', style='margin: 18px 0;')
     tr
-      td(style='padding-bottom: 5px;')
-        strong Name: 
-        | #{visitorName}
+      td.meta-row(style='padding-bottom: 6px;')
+        span.meta-label From
+        span.meta-value #{visitorName}
     tr
-      td(style='padding-bottom: 15px;')
-        strong Email: 
-        | #{visitorEmail}
-        
-  p(style='margin-top: 10px; font-weight: bold; color: #222222;') Message Content:
+      td.meta-row
+        span.meta-label Email
+        //- NOTE: visitorEmail is bound by the contact controller
+        a.meta-value(href='mailto:#{visitorEmail}', style='color: #C8A96E;') #{visitorEmail}
+
+  hr.divider
+
+  //- ── Subject highlight band (visually prominent) ──
+  //- CHANGED: Subject is now displayed in a distinct gold-tinted
+  //- band to make it immediately readable at a glance.
+  .subject-band
+    p.subject-label Subject
+    p.subject-text #{subject}
+
+  //- ── Message body highlight box (visually prominent) ──
+  //- CHANGED: The visitor's full message is now displayed inside
+  //- the left-gold-border message-box so it is the visual anchor
+  //- of the email rather than a plain paragraph.
   .message-box
+    span.message-label Message
     p #{visitorMessage}

@@ -59,7 +59,7 @@ const sendEmail = async (options) => {
   }
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM || `Portfolio Admin <${process.env.EMAIL_USERNAME || 'admin@ashishbiswas.dev'}>`,
+    from: options.from || process.env.EMAIL_FROM || `Portfolio Contact Form <${process.env.EMAIL_USERNAME || 'admin@ashishbiswas.dev'}>`,
     to: options.to || options.email,
     subject: options.subject,
     html,

@@ -3,66 +3,259 @@ html
   head
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
     meta(http-equiv='Content-Type', content='text/html; charset=UTF-8')
+    meta(name='color-scheme', content='dark')
+    meta(name='supported-color-schemes', content='dark')
     title #{subject}
+    //- ============================================================
+    //- DESIGN TOKENS  (mirroring globals.css CSS variables)
+    //- --void:          #08080D
+    //- --surface-card:  #111118
+    //- --surface-raised:#16161F
+    //- --gold:          #C8A96E
+    //- --gold-dim:      rgba(200,169,110,0.18)
+    //- --text-primary:  #F0EEE8
+    //- --text-secondary:#8E8D88  (rgba(240,238,232,0.55) resolved)
+    //- --border-subtle: #1C1C24  (rgba(255,255,255,0.06) resolved)
+    //- ============================================================
     style.
-      /* Global email layout structure */
-      body { background-color: #f6f6f6; font-family: sans-serif; -webkit-font-smoothing: antialiased; font-size: 14px; line-height: 1.6; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
-      table { border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; }
-      table td { font-family: sans-serif; font-size: 14px; vertical-align: top; }
-      .body { background-color: #f6f6f6; width: 100%; }
-      .container { display: block; margin: 0 auto !important; max-width: 580px; padding: 10px; width: 580px; }
-      .content { display: block; margin: 0 auto; max-width: 580px; padding: 10px; }
-      
-      /* Visual Design Components */
-      .main { background: #ffffff; border-radius: 8px; width: 100%; border: 1px solid #e9e9e9; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-      .wrapper { box-sizing: border-box; padding: 30px; }
-      .header { padding: 20px 0; text-align: center; }
-      .brand-logo { color: #0070f3; font-size: 22px; font-weight: bold; text-decoration: none; letter-spacing: -0.5px; }
-      .footer { clear: both; margin-top: 20px; text-align: center; width: 100%; }
-      .footer td, .footer p, .footer span { color: #999999; font-size: 12px; text-align: center; }
-      
-      /* Typography & Utility classes */
-      h2 { color: #222222; font-family: sans-serif; font-weight: 600; line-height: 1.4; margin: 0; margin-bottom: 20px; font-size: 18px; }
-      p { font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px; color: #4a4a4a; }
-      
-      /* Buttons */
-      .btn { box-sizing: border-box; width: 100%; }
-      .btn table { width: auto; margin: 20px 0; }
-      .btn table td { background-color: #0070f3; border-radius: 5px; text-align: center; }
-      .btn a { background-color: #0070f3; border: solid 1px #0070f3; border-radius: 5px; box-sizing: border-box; color: #ffffff !important; display: inline-block; font-size: 14px; font-weight: bold; margin: 0; padding: 12px 25px; text-decoration: none; }
-      
-      /* Custom UI alerts */
-      .message-box { background: #f9f9f9; padding: 15px; border-left: 4px solid #0070f3; border-radius: 4px; margin-top: 15px; font-style: italic; color: #333333; }
-  
+      /* ── Reset & email-client normalisation ── */
+      body, html { margin: 0; padding: 0; width: 100%; }
+      body {
+        background-color: #08080D;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        font-size: 14px;
+        line-height: 1.65;
+        color: #F0EEE8;
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+      table {
+        border-collapse: separate;
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+        width: 100%;
+      }
+      table td { font-family: inherit; font-size: 14px; vertical-align: top; }
+      img { border: none; -ms-interpolation-mode: bicubic; max-width: 100%; }
+      a { color: #C8A96E; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      /* ── Outer wrapper ── */
+      .body-wrap { background-color: #08080D; width: 100%; padding: 30px 10px; }
+      .container  { margin: 0 auto; max-width: 560px; width: 100%; }
+
+      /* ── Brand header ── */
+      .email-header { text-align: center; padding-bottom: 24px; }
+      .brand-wordmark {
+        display: inline-block;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 15px;
+        font-weight: 400;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: #C8A96E;
+        text-decoration: none;
+      }
+      .brand-dot { color: rgba(200,169,110,0.45); margin: 0 6px; }
+
+      /* ── Main card ── */
+      .card {
+        background-color: #111118;
+        border: 1px solid #1C1C24;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      /* ── Gold top-bar accent ── */
+      .card-accent {
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, #C8A96E 40%, #C8A96E 60%, transparent 100%);
+      }
+
+      /* ── Card body padding ── */
+      .card-body { padding: 36px 40px 32px; }
+      @media only screen and (max-width: 600px) {
+        .card-body { padding: 28px 24px 24px !important; }
+      }
+
+      /* ── Typography ── */
+      .email-heading {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 22px;
+        font-weight: 400;
+        color: #F0EEE8;
+        line-height: 1.35;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.015em;
+      }
+      .email-heading strong { font-weight: 600; }
+      .email-heading em { color: #C8A96E; font-style: normal; }
+
+      .eyebrow {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 10px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #C8A96E;
+        margin: 0 0 14px 0;
+      }
+      .eyebrow-line {
+        display: inline-block;
+        width: 18px;
+        height: 1px;
+        background-color: #C8A96E;
+        vertical-align: middle;
+        margin-right: 8px;
+      }
+
+      p {
+        font-size: 14px;
+        line-height: 1.7;
+        color: rgba(240,238,232,0.65);
+        margin: 0 0 16px 0;
+      }
+
+      /* ── Divider ── */
+      .divider {
+        border: 0;
+        border-top: 1px solid #1C1C24;
+        margin: 24px 0;
+      }
+
+      /* ── Meta-data rows (name / email labels) ── */
+      .meta-row { margin-bottom: 6px; font-size: 13px; color: rgba(240,238,232,0.65); }
+      .meta-label {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(200,169,110,0.7);
+        display: inline-block;
+        margin-right: 8px;
+      }
+      .meta-value { color: #F0EEE8; font-size: 13px; }
+
+      /* ── Subject highlight band ── */
+      .subject-band {
+        background-color: rgba(200,169,110,0.07);
+        border: 1px solid rgba(200,169,110,0.18);
+        border-radius: 3px;
+        padding: 14px 18px;
+        margin: 20px 0;
+      }
+      .subject-band .subject-label {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 9px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #C8A96E;
+        margin-bottom: 6px;
+      }
+      .subject-band .subject-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: #F0EEE8;
+        margin: 0;
+        line-height: 1.4;
+      }
+
+      /* ── Message body highlight box ── */
+      .message-box {
+        background-color: #16161F;
+        border-left: 3px solid #C8A96E;
+        border-radius: 0 3px 3px 0;
+        padding: 20px 22px;
+        margin: 20px 0;
+      }
+      .message-box p {
+        font-size: 14px;
+        line-height: 1.75;
+        color: #F0EEE8;
+        margin: 0;
+        white-space: pre-line;
+      }
+      .message-box .message-label {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 9px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(200,169,110,0.7);
+        margin-bottom: 10px;
+        display: block;
+      }
+
+      /* ── Original message quote ── */
+      .quote-box {
+        border-left: 2px solid #1C1C24;
+        padding-left: 16px;
+        margin: 12px 0 0;
+      }
+      .quote-box p {
+        font-size: 12px;
+        color: rgba(240,238,232,0.38);
+        font-style: italic;
+        margin: 0;
+        white-space: pre-line;
+        line-height: 1.65;
+      }
+
+      /* ── CTA Button ── */
+      .btn-wrap { text-align: center; margin: 28px 0 20px; }
+      .btn-cta {
+        display: inline-block;
+        background-color: #C8A96E;
+        color: #08080D !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-decoration: none !important;
+        padding: 14px 32px;
+        border-radius: 2px;
+      }
+      .btn-cta:hover { background-color: #d4b87a; }
+
+      /* ── Footer ── */
+      .email-footer { text-align: center; padding: 28px 10px 10px; }
+      .footer-rule { border: 0; border-top: 1px solid #1C1C24; margin-bottom: 20px; }
+      .footer-text {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(240,238,232,0.22);
+        line-height: 2;
+      }
+      .footer-gold { color: rgba(200,169,110,0.5); }
+
   body
-    table.body(role='presentation', border='0', cellpadding='0', cellspacing='0')
+    //- ── Outer background table ──
+    table.body-wrap(role='presentation', border='0', cellpadding='0', cellspacing='0')
       tr
-        td &nbsp;
-        td.container
-          .content
-            // UNIVERSAL HEADER
-            .header
-              table(role='presentation', border='0', cellpadding='0', cellspacing='0')
-                tr
-                  td
-                    a.brand-logo(href='#') Portfolio Hub
-            
-            // MAIN CONTENT CARD
-            table.main(role='presentation', border='0', cellpadding='0', cellspacing='0')
-              tr
-                td.wrapper
-                  table(role='presentation', border='0', cellpadding='0', cellspacing='0')
-                    tr
-                      td
-                        // This block acts as a portal. The child files inject their code directly here!
-                        block content
-            
-            // UNIVERSAL FOOTER
-            .footer
-              table(role='presentation', border='0', cellpadding='0', cellspacing='0')
-                tr
-                  td.content-block
-                    span Active Developer Portal Engine
-                    br
-                    | Ashish Biswas Portfolio © 2026
-        td &nbsp;
+        td
+          .container
+            //- ── Brand Header ──
+            .email-header
+              a.brand-wordmark(href='#')
+                | Ashish
+                span.brand-dot ·
+                | Biswas
+
+            //- ── Main Card ──
+            .card
+              //- Gold accent bar at top
+              .card-accent
+              .card-body
+                //- Child template injects here
+                block content
+
+            //- ── Footer ──
+            .email-footer
+              hr.footer-rule
+              p.footer-text
+                span.footer-gold Portfolio
+                |  Engine  ·  Ashish Biswas  ©  2026
+                br
+                | This is an automated system message.
